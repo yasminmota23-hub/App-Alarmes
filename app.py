@@ -4,14 +4,16 @@ from datetime import datetime
 
 # === CONFIGURAÇÕES ===
 BASE_URL = "https://api.maas-moura.com"
+EMAIL = "yasmin.mota@grupomoura.com"   # 🔁 SUBSTITUA PELO SEU E-MAIL
+SENHA = "Yasmim@2023"     # 🔁 SUBSTITUA PELA SUA SENHA
 
 # === LOGIN ===
-def obter_token(email, senha):
+def obter_token():
     url = f"{BASE_URL}/auth/login"
-    payload = {"email": email, "password": senha}
+    payload = {"email": EMAIL, "password": SENHA}
     r = requests.post(url, json=payload)
     if r.status_code == 200:
-        return r.json().get("access_token")
+        return r.json().get("token")
     return None
 
 # === CONSULTA DE ALARMES ===
@@ -32,23 +34,19 @@ def consultar_alarmes(site_id, token):
     except:
         return None
 
-# === INTERFACE ===
+# === INTERFACE STREAMLIT ===
 st.set_page_config(page_title="Consulta de Alarmes", page_icon="🚨")
 st.title("🚨 Consulta de Alarmes - MOURA")
 
-with st.form("login_form"):
-    email = st.text_input("📧 E-mail")
-    senha = st.text_input("🔒 Senha", type="password")
-    site_id = st.text_input("🏷️ ID do Site (ex: PEFCX)").strip().upper()
-    submitted = st.form_submit_button("Consultar")
+site_id = st.text_input("🏷️ Digite o ID do site (ex: PEFCX)").strip().upper()
 
-if submitted:
-    with st.spinner("🔄 Consultando..."):
-        token = obter_token(email, senha)
+if st.button("Consultar"):
+    with st.spinner("🔄 Fazendo login e consultando..."):
+        token = obter_token()
         if token:
             resultado = consultar_alarmes(site_id, token)
             if resultado == "vazio":
-                st.success("✅ Site válido, mas sem alarmes ativos.")
+                st.success("✅ Site sem alarmes ativos ou inexistente.")
             elif resultado == "invalido":
                 st.error("❌ Site inválido ou resposta inesperada da API.")
             elif isinstance(resultado, list):
@@ -63,4 +61,4 @@ if submitted:
             else:
                 st.error("❌ Erro ao processar resposta da API.")
         else:
-            st.error("❌ Falha no login. Verifique e-mail e senha.")
+            st.error("❌ Erro no login automático. Verifique e-mail/senha no código.")
